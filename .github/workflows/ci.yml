@@ -1,10 +1,9 @@
 name: CI
 
 on:
-  push:
-    branches: [ main, develop, feature/** ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch: {}        # run manually
+  pull_request:                # run on PRs only (no pushes)
+    branches: [ main, develop ]
 
 permissions:
   contents: read
@@ -15,7 +14,6 @@ env:
 jobs:
   lint-test-validate:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,8 +28,7 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          restore-keys: ${{ runner.os }}-pip-
 
       - name: Install deps (dev)
         run: |
@@ -46,8 +43,7 @@ jobs:
           if [ -f pyproject.toml ] || [ -f mypy.ini ] || [ -d src ]; then mypy ; fi
 
       - name: Run tests (pytest)
-        run: |
-          pytest -q
+        run: pytest -q
 
       - name: Terraform fmt & validate (no backend)
         working-directory: infra
