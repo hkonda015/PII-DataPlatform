@@ -1,3 +1,79 @@
 name: CI
-on: [push]
-jobs: {build: {runs-on: ubuntu-latest, steps: [{uses: actions/checkout@v4}]}}
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  lint-test-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install deps (dev)
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Code quality (ruff, black, mypy)
+        run: |
+          ruff check .
+          black --check .
+          if [ -f pyproject.toml ] || [ -f mypy.ini ] || [ -d src ]; then mypy ; fi
+
+      - name: Run tests (pytest)
+        run: |
+          pytest -q
+
+      - name: Terraform fmt & validate (no backend)
+        working-directory: infra
+        if: ${{ hashFiles('infra/**/*.tf') != '' }}
+        run: |
+          terraform -version
+          terraform fmt -check -recursive
+          terraform init -backend=false
+          terraform validate
+
+      - name: Security scan (tfsec)
+        if: ${{ hashFiles('infra/**/*.tf') != '' }}
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: infra
+
+      - name: Package Validation Lambda (zip)
+        if: ${{ hashFiles('src/validation_lambda/**') != '' }}
+        run: |
+          mkdir -p dist
+          (cd src/validation_lambda && zip -r ../../dist/validation_lambda.zip .)
+
+      - name: Upload artifact
+        if: ${{ hashFiles('dist/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/**
+          retention-days: 7
