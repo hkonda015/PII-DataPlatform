@@ -1,11 +1,171 @@
 name: CD
-on: [workflow_dispatch]
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (dev/test/prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, test, prod]
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  id-token: write     # for AWS OIDC
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-west-2
+  TF_WORKDIR: infra
+  PYTHON_VERSION: "3.11"
 
 jobs:
-  build:
-	runs-on: ubuntu-latest
-	steps:
-	  - name: Checkout repository
-		uses: actions/checkout@v3
-	  - name: Run a one-line script
-		run: echo "Hello, world!"
+  plan:
+    name: Terraform plan (${{ inputs.environment || 'dev' }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS (assume role via OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}
+          # For test/prod, set environment protection rules and override role in apply jobs below.
+
+      - name: Setup Terraform cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.TF_WORKDIR }}/.terraform
+            ${{ env.TF_WORKDIR }}/.terraform.lock.hcl
+          key: ${{ runner.os }}-tf-${{ hashFiles(format('{0}/**/*.tf', env.TF_WORKDIR)) }}
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TFSTATE_BUCKET }}" \
+            -backend-config="key=${{ inputs.environment || 'dev' }}/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+
+      - name: Terraform plan
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform workspace select ${{ inputs.environment || 'dev' }} || terraform workspace new ${{ inputs.environment || 'dev' }}
+          terraform plan -input=false -out=tfplan \
+            -var="environment=${{ inputs.environment || 'dev' }}" \
+            -var="aws_region=${{ env.AWS_REGION }}"
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ inputs.environment || 'dev' }}
+          path: ${{ env.TF_WORKDIR }}/tfplan
+          retention-days: 3
+
+  apply-dev:
+    name: Apply (dev)
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: plan
+    if: ${{ (inputs.environment == 'dev') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS (dev)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-dev
+          path: infra
+
+      - name: Terraform apply
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: terraform apply -input=false tfplan
+
+      - name: Build & deploy Lambda code (validation)
+        env:
+          LAMBDA_FUNCTION_NAME: ${{ vars.LAMBDA_VALIDATION_NAME_DEV }}
+        run: |
+          python -m pip install --upgrade pip
+          # If your lambda needs deps, do a build step here.
+          (cd src/validation_lambda && zip -r ../../dist/validation_lambda.zip .)
+          aws lambda update-function-code \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --zip-file fileb://dist/validation_lambda.zip
+
+  apply-test:
+    name: Apply (test)
+    runs-on: ubuntu-latest
+    environment: test
+    needs: apply-dev
+    if: ${{ (inputs.environment == 'test') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS (test)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_TEST }}
+
+      - name: Terraform init & apply (test)
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TFSTATE_BUCKET }}" \
+            -backend-config="key=test/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+          terraform workspace select test || terraform workspace new test
+          terraform apply -input=false -auto-approve \
+            -var="environment=test" \
+            -var="aws_region=${{ env.AWS_REGION }}"
+
+      - name: Build & deploy Lambda code (validation)
+        env:
+          LAMBDA_FUNCTION_NAME: ${{ vars.LAMBDA_VALIDATION_NAME_TEST }}
+        run: |
+          (cd src/validation_lambda && zip -r ../../dist/validation_lambda.zip .)
+          aws lambda update-function-code \
+            --function-name "$LAMBDA_FUNCTION_NAME" \
+            --zip-file fileb://dist/validation_lambda.zip
+
+  apply-prod:
+    name: Apply (prod)
+    runs-on: ubuntu-latest
+    environment: prod   # add required reviewers in repo settings → Environments
+    needs: apply-test
+    if: ${{ (inputs.environment == 'prod') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS (prod)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
+
+      - name: Terraform init & apply (prod)
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TFSTATE_BUCKET }}" \
+            -bac
