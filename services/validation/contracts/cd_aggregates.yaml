@@ -1,2 +1,51 @@
 dataset_id: cd_aggregates
-schema_version: '1.2.0'
+schema_version: "1.2.0"
+
+file:
+  format: csv
+  encoding: utf-8
+  delimiter: ","
+  header: true
+  max_uncompressed_mb: 512
+  allowed_extensions: [".csv", ".xls", ".xlsx", ".xml"]
+  xls_sheet: "data"            # required if format is xls/xlsx
+  reject_unknown_columns: true
+
+partitions:
+  - name: periodStart
+  - name: periodEnd
+  - name: org
+
+primary_key: [reporting_date, region]
+
+columns:
+  - name: reporting_date
+    type: date
+    required: true
+    rules: [date_iso8601, date_within_reporting_period]
+
+  - name: region
+    type: string
+    required: true
+    enum: [E, NE, NW, SE, SW, W, N, S]
+
+  - name: cases_total
+    type: int
+    required: true
+    min: 0
+    rules: [non_negative]
+
+validation:
+  severity_policy:
+    date_iso8601: error
+    date_within_reporting_period: error
+    enum: error
+    non_negative: error
+  on_error: reject
+  on_pass: accept
+  report_fields: [rule_id, column, row_sample, message]
+
+evolution:
+  additive_only: true
+  breaking_change_grace_days: 30
+  notify_on_deprecation: true

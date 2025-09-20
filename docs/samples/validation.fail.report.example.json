@@ -1,0 +1,107 @@
+{
+  "event": "file_validation",
+  "status": "FAIL",
+  "dataset_id": "cd_aggregates",
+  "org": "DA-Scotland",
+  "object": {
+    "bucket": "ukhsa-upload",
+    "key": "cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv",
+    "etag": "b026324c6904b2a9cb4b88d6d61c81d1",
+    "size_bytes": 7421159
+  },
+  "manifest": {
+    "schema_version": "1.2.0",
+    "reporting_period": {
+      "start": "2025-08-01",
+      "end": "2025-08-31"
+    },
+    "row_count": 125438,
+    "content_hash": "sha256:9f04f0a2b1f3d3c9f12e0f4b7f0c2f10a7e1c77b2d34e2a1b9b9f2aa9ce3a111",
+    "contact_email": "data-team@scot.gov"
+  },
+  "partitions": {
+    "periodStart": "2025-08-01",
+    "periodEnd": "2025-08-31",
+    "version": "v1",
+    "org": "DA-Scotland"
+  },
+  "contract": {
+    "schema_version": "1.2.0"
+  },
+  "evaluation": {
+    "schema": {
+      "missing_columns": ["cases_total"],
+      "unknown_columns": ["regionX"],
+      "types_ok": false
+    },
+    "rules": {
+      "evaluated": [
+        "required_columns",
+        "date_iso8601",
+        "date_within_reporting_period",
+        "non_negative"
+      ],
+      "violations": [
+        {
+          "code": "SCHEMA_MISSING_COLUMNS",
+          "severity": "error",
+          "scope": "schema",
+          "rule_id": "required_columns",
+          "message": "Missing required column(s): cases_total.",
+          "fix_hint": "Add the missing column to the header exactly as specified (cases_total)."
+        },
+        {
+          "code": "FIELD_REGEX_MISMATCH",
+          "severity": "error",
+          "scope": "field",
+          "rule_id": "date_iso8601",
+          "column": "reporting_date",
+          "row_sample": { "row_number": 2, "value": "01/08/2025" },
+          "message": "Invalid date format: use YYYY-MM-DD (e.g., 2025-08-01).",
+          "fix_hint": "Export dates as ISO strings; avoid locale formats like DD/MM/YYYY."
+        },
+        {
+          "code": "SEMANTIC_OUT_OF_RANGE",
+          "severity": "error",
+          "scope": "semantic",
+          "rule_id": "date_within_reporting_period",
+          "column": "reporting_date",
+          "row_sample": { "row_number": 5, "value": "2025-09-01" },
+          "message": "reporting_date 2025-09-01 is outside the reporting period 2025-08-01..2025-08-31.",
+          "fix_hint": "Correct the reporting_date or update the manifest/partitions to reflect the intended period."
+        },
+        {
+          "code": "FIELD_NEGATIVE_VALUE",
+          "severity": "error",
+          "scope": "field",
+          "rule_id": "non_negative",
+          "column": "cases_total",
+          "row_sample": { "row_number": 10, "value": -3 },
+          "message": "Value must be >= 0.",
+          "fix_hint": "Correct negative counts to zero or a positive integer."
+        }
+      ],
+      "fail_count": 4,
+      "warn_count": 0
+    }
+  },
+  "top_issues": [
+    "Missing required column(s): cases_total.",
+    "Invalid date format: use YYYY-MM-DD (e.g., 2025-08-01).",
+    "reporting_date 2025-09-01 is outside the reporting period 2025-08-01..2025-08-31."
+  ],
+  "route": {
+    "moved_to": "s3://ukhsa-upload-rejected/cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/",
+    "report_uri": "s3://ukhsa-validation-log/reports/cd_aggregates/DA-Scotland/2025-08-01/2025-08-31/v1/report.json",
+    "email_template": "FAIL"
+  },
+  "next_steps": [
+    "Add the missing header 'cases_total' and re-export.",
+    "Format all dates as YYYY-MM-DD.",
+    "Remove rows with reporting_date outside 2025-08-01..2025-08-31.",
+    "Replace negative 'cases_total' values with zero or a positive integer."
+  ],
+  "idempotency_key": "ukhsa-upload|cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv|b026324c6904b2a9cb4b88d6d61c81d1",
+  "correlation_id": "a6f8b3a2-7f8a-4f7e-9d4d-22c7c438a5a1",
+  "processed_at_utc": "2025-09-18T10:22:17Z"
+}

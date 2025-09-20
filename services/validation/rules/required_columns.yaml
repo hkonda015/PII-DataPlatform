@@ -1,0 +1,25 @@
+# services/validation/rules/required_columns.yaml
+# Purpose: Ensure the file header includes all mandatory columns.
+
+id: required_columns
+scope: schema                     # schema-level check against the file header
+description: Header must include reporting_date, region, and cases_total.
+applies_to: columns               # engine checks the parsed column names
+type: required_headers            # custom rule: set-inclusion on header names
+
+required_headers:
+  - reporting_date
+  - region
+  - cases_total
+
+case_sensitive: false
+trim_whitespace: true
+allow_extra_columns: true         # presence-only check; extra columns are handled by contract.file.reject_unknown_columns
+severity: error
+
+message: "Missing required column(s): {{missing}}."
+fix_hint: "Add the missing columns to the header exactly as specified (e.g., reporting_date, region, cases_total)."
+
+examples:
+  header_valid: "reporting_date,region,cases_total"
+  header_invalid: "reporting_date,region"

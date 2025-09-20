@@ -1,0 +1,47 @@
+{
+  "version": "0",
+  "id": "6e7f8a9b-1c2d-3e4f-5a6b-7c8d9e0f1a2b",
+  "detail-type": "Macie Finding",
+  "source": "aws.macie2",
+  "account": "123456789012",
+  "time": "2025-08-31T23:56:10Z",
+  "region": "eu-west-2",
+  "resources": [],
+  "detail": {
+    "findingId": "f1a2b3c4-5678-49de-9012-3fa4b5c6d7e8",
+    "type": "SensitiveData:S3Object/Multiple.PII",
+    "title": "Sensitive data detected in S3 object",
+    "description": "Amazon Macie detected potential sensitive data in an S3 object.",
+    "category": "CLASSIFICATION",
+    "severity": {
+      "score": 72,
+      "description": "High"
+    },
+    "archived": false,
+    "sample": false,
+    "resourcesAffected": {
+      "s3Bucket": {
+        "name": "ukhsa-upload",
+        "arn": "arn:aws:s3:::ukhsa-upload",
+        "owner": {
+          "displayName": "ukhsa",
+          "id": "A3NL1KOZZKExample"
+        },
+        "tags": []
+      },
+      "s3Object": {
+        "key": "cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv",
+        "path": "s3://ukhsa-upload/cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv",
+        "etag": "5d41402abc4b2a76b9719d911017c592",
+        "lastModified": "2025-08-31T23:55:12Z",
+        "size": 7421159
+      }
+    },
+    "topDetections": [
+      { "type": "EmailAddress", "count": 14 },
+      { "type": "UKNationalInsuranceNumber", "count": 3 }
+    ],
+    "createdAt": "2025-08-31T23:56:07Z",
+    "updatedAt": "2025-08-31T23:56:07Z"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "TemplateName": "UKHSA_Validation_Fail",
+  "TemplateContent": {
+    "Subject": "Your dataset upload failed validation — {{dataset_id}}",
+    "Text": "Hello,\n\nWe could not ingest your file.\n\nDataset: {{dataset_id}}\nFile: {{object_key}}\nUploaded: {{timestamp}}\n\nTop issues:\n- {{issue1}}\n- {{issue2}}\n- {{issue3}}\n\nFull report: {{report_uri}}\n\nWhat to do next:\n1) Review the report for failing rows and rule IDs.\n2) Correct the file (headers, formats, values) per the uploader guide.\n3) Re-upload with an incremented version (e.g., v2).\n\nIf you have questions, reply with your correlation ID: {{correlation_id}}.\n\nRegards,\nUKHSA Data Platform",
+    "Html": "<!doctype html><html><body style=\"font-family:Arial,Helvetica,sans-serif;line-height:1.4;color:#111;margin:0;padding:16px\"><h2 style=\"margin:0 0 12px 0\">Upload failed validation — {{dataset_id}}</h2><p><strong>File</strong>: {{object_key}}<br/><strong>Uploaded</strong>: {{timestamp}}</p><p><strong>Top issues</strong>:</p><ul><li>{{issue1}}</li><li>{{issue2}}</li><li>{{issue3}}</li></ul><p><strong>Full report</strong>: <a href=\"{{report_uri}}\">{{report_uri}}</a></p><p><strong>Next steps</strong>:</p><ol><li>Review the report for failing rows and rule IDs.</li><li>Correct the file (headers, formats, values) per the uploader guide.</li><li>Re-upload with a new version (e.g., v2).</li></ol><p style=\"color:#555\">Correlation ID: <code>{{correlation_id}}</code></p><p>Regards,<br/>UKHSA Data Platform</p></body></html>"
+  }
+}

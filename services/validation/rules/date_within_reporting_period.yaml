@@ -1,0 +1,41 @@
+# services/validation/rules/date_within_reporting_period.yaml
+# Purpose: Ensure each record's reporting_date falls within the declared reporting period.
+
+id: date_within_reporting_period
+scope: semantic                        # cross-record / cross-metadata validation
+description: reporting_date must be within the manifest's reporting period (and align with S3 path partitions if present).
+applies_to: reporting_date
+type: range_from_manifest              # custom rule: compare a column against start/end taken from manifest
+
+params:
+  # Where to read the period from in the manifest JSON placed alongside the file
+  manifest_period_start_pointer: "$.reporting_period.start"
+  manifest_period_end_pointer:   "$.reporting_period.end"
+
+  # Optional: also cross-check against S3 partition keys if your ingestion path encodes periodStart/periodEnd
+  also_match_partitions: true
+  partition_keys:
+    start: "periodStart"
+    end:   "periodEnd"
+
+  # Parsing / comparison behaviour
+  date_format: "%Y-%m-%d"              # ISO-8601 calendar date
+  timezone: "UTC"
+  inclusive: true                      # allow equality to start/end dates
+  allow_null: false                    # nulls fail unless handled by 'required: true' in contract
+
+message: "reporting_date {{value}} is outside the reporting period {{start}}..{{end}}."
+fix_hint: "Correct the reporting_date or update the manifest/reporting period (and folder partitions) to match the intended window."
+
+# Optional examples for clarity and unit tests
+examples:
+  manifest:
+    reporting_period:
+      start: "2025-08-01"
+      end:   "2025-08-31"
+  valid_rows:
+    - { reporting_date: "2025-08-01" }
+    - { reporting_date: "2025-08-31" }
+  invalid_rows:
+    - { reporting_date: "2025-07-31" }
+    - { reporting_date: "2025-09-01" }

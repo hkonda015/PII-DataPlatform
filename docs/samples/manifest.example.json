@@ -1,0 +1,12 @@
+{
+  "dataset_id": "cd_aggregates",
+  "org": "DA-Scotland",
+  "schema_version": "1.2.0",
+  "reporting_period": {
+    "start": "2025-08-01",
+    "end": "2025-08-31"
+  },
+  "row_count": 125438,
+  "content_hash": "sha256:3f786850e387550fdab836ed7e6dc881de23001b5b5a6fdf3d3f93b1e0f1a9c",
+  "contact_email": "data-team@scot.gov"
+}

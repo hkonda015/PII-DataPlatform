@@ -1,0 +1,52 @@
+{
+  "event": "macie_pii_detection",
+  "status": "QUARANTINE",
+  "dataset_id": "cd_aggregates",
+  "org": "DA-Scotland",
+
+  "object": {
+    "bucket": "ukhsa-upload",
+    "key": "cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv",
+    "etag": "5d41402abc4b2a76b9719d911017c592",
+    "size_bytes": 7421159,
+    "region": "eu-west-2"
+  },
+
+  "macie_finding": {
+    "id": "f1a2b3c4-5678-49de-9012-3fa4b5c6d7e8",
+    "type": "SensitiveData:S3Object/Multiple.PII",
+    "category": "CLASSIFICATION",
+    "severity": {
+      "score": 7.2,
+      "label": "HIGH"
+    },
+    "description": "Sensitive data detected in S3 object (possible PII).",
+    "resources_affected": {
+      "s3_bucket": "ukhsa-upload",
+      "s3_object_key": "cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv"
+    },
+    "top_detections": [
+      { "type": "EmailAddress", "count": 14 },
+      { "type": "UKNationalInsuranceNumber", "count": 3 }
+    ],
+    "sample": false
+  },
+
+  "actions": {
+    "object_removed_from_upload": true,
+    "quarantine_record_uri": "s3://ukhsa-validation-log/macie/cd_aggregates/DA-Scotland/2025-08-01/2025-08-31/v1/f1a2b3c4-5678-49de-9012-3fa4b5c6d7e8.finding.json",
+    "email_template": "PII",
+    "email_recipients": ["data-team@scot.gov"],
+    "notified_at_utc": "2025-09-18T10:28:41Z"
+  },
+
+  "operator_guidance": [
+    "This dataset is non-PII only. Remove direct identifiers and resubmit aggregate values.",
+    "If this is a false positive (e.g., code-like strings), raise a Macie allow-list request per runbook."
+  ],
+
+  "idempotency_key": "ukhsa-upload|cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv|5d41402abc4b2a76b9719d911017c592",
+  "correlation_id": "7c8a1d5f-1f6e-4df1-9b7c-2b1d5b9f2a33",
+  "processed_at_utc": "2025-09-18T10:28:41Z",
+  "console_url_hint": "Open the finding in AWS Macie → Findings and search by the finding ID."
+}

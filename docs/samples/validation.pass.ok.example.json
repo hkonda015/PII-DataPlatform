@@ -1,0 +1,55 @@
+{
+  "event": "file_validation",
+  "status": "PASS",
+  "dataset_id": "cd_aggregates",
+  "org": "DA-Scotland",
+  "object": {
+    "bucket": "ukhsa-upload",
+    "key": "cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv",
+    "etag": "d41d8cd98f00b204e9800998ecf8427e",
+    "size_bytes": 8349921
+  },
+  "manifest": {
+    "schema_version": "1.2.0",
+    "reporting_period": {
+      "start": "2025-08-01",
+      "end": "2025-08-31"
+    },
+    "row_count": 125438,
+    "content_hash": "sha256:3f786850e387550fdab836ed7e6dc881de23001b5b5a6fdf3d3f93b1e0f1a9c",
+    "contact_email": "data-team@scot.gov"
+  },
+  "partitions": {
+    "periodStart": "2025-08-01",
+    "periodEnd": "2025-08-31",
+    "version": "v1",
+    "org": "DA-Scotland"
+  },
+  "contract": {
+    "schema_version": "1.2.0"
+  },
+  "evaluation": {
+    "schema": {
+      "missing_columns": [],
+      "unknown_columns": [],
+      "types_ok": true
+    },
+    "rules": {
+      "evaluated": [
+        "required_columns",
+        "date_iso8601",
+        "date_within_reporting_period",
+        "non_negative"
+      ],
+      "fail_count": 0,
+      "warn_count": 0
+    }
+  },
+  "route": {
+    "eligible_for": ["standardise_to_parquet"],
+    "ok_record_uri": "s3://ukhsa-validation-log/reports/cd_aggregates/DA-Scotland/2025-08-01/2025-08-31/v1/ok.json"
+  },
+  "idempotency_key": "ukhsa-upload|cd_aggregates/DA-Scotland/periodStart=2025-08-01/periodEnd=2025-08-31/version=v1/cd_aggregates_DA-Scotland_2025-08-01_2025-08-31_v1.csv|d41d8cd98f00b204e9800998ecf8427e",
+  "correlation_id": "e1a5f0e0-22fb-42f0-9bdb-baa0f7a9c8bb",
+  "processed_at_utc": "2025-09-18T10:12:45Z"
+}

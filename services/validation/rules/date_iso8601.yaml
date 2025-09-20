@@ -1,2 +1,14 @@
+# services/validation/rules/date_iso8601.yaml
+
 id: date_iso8601
-scope: field
+scope: field                         # field | schema | file | semantic
+description: Date must be ISO 8601 calendar date (YYYY-MM-DD).
+applies_to: reporting_date           # bound by the contract's column context
+type: regex
+pattern: "^(?:19|20|21)\\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])$"
+message: "Invalid date format: use YYYY-MM-DD (e.g., 2025-08-01)."
+fix_hint: "Export dates as ISO strings; avoid locale formats like DD/MM/YYYY."
+
+# Optional examples to aid readers and unit tests
+example_valid: ["2025-08-01", "2024-02-29"]
+example_invalid: ["01/08/2025", "2025-13-01", "2025-00-10", "2025-02-30"]
